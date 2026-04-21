@@ -93,6 +93,10 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
+    # Disable ?format=... content negotiation so our report views can
+    # use ?format=csv as a plain query param. Without this DRF tries
+    # to find a CSV renderer, fails, and returns 404.
+    'URL_FORMAT_OVERRIDE': None,
 }
 
 CORS_ALLOW_ALL_ORIGINS = True
