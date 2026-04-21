@@ -40,6 +40,7 @@ export default function AuditLogs({ showToast }) {
       {logs == null ? <div className="card">Loading…</div>
        : logs.length === 0 ? <EmptyState>No audit entries.</EmptyState>
        : (
+        <div className="table-wrap">
         <table className="table">
           <thead><tr>
             <th>When</th><th>User</th><th>Action</th><th>Target</th><th>Description</th><th>IP</th>
@@ -57,6 +58,7 @@ export default function AuditLogs({ showToast }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

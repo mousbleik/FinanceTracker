@@ -44,7 +44,7 @@ const NAV = [
 
 function Shell({ user, onLogout, children }) {
   const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark');
-  const [drawerOpen, setDrawerOpen] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 800);
 
   useEffect(() => {
     document.documentElement.dataset.theme = dark ? 'dark' : 'light';
@@ -61,7 +61,15 @@ function Shell({ user, onLogout, children }) {
   }, [location.pathname]);
 
   return (
-    <div className={`app ${drawerOpen ? 'drawer-open' : 'drawer-closed'}`}>
+    <div
+      className={`app ${drawerOpen ? 'drawer-open' : 'drawer-closed'}`}
+      onClick={e => {
+        // Click the dimmed overlay (::after on mobile) closes the drawer.
+        if (drawerOpen && window.innerWidth < 800 && e.target === e.currentTarget) {
+          setDrawerOpen(false);
+        }
+      }}
+    >
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">SH</div>
@@ -88,9 +96,9 @@ function Shell({ user, onLogout, children }) {
           <button className="icon-btn" onClick={() => setDrawerOpen(d => !d)} aria-label="Toggle menu">☰</button>
           <div className="title">{title}</div>
           <button className="icon-btn" onClick={() => setDark(d => !d)} aria-label="Toggle dark mode">
-            {dark ? '☀ Light' : '☾ Dark'}
+            {dark ? '☀' : '☾'}<span className="dark-toggle-label">&nbsp;{dark ? 'Light' : 'Dark'}</span>
           </button>
-          <span className="muted" style={{ fontSize: 12 }}>{user?.username} · {user?.role}</span>
+          <span className="user-info">{user?.username} · {user?.role}</span>
           <button className="icon-btn" onClick={onLogout}>Log out</button>
         </div>
         <div className="content">{children}</div>

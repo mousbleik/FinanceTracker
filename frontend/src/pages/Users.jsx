@@ -81,6 +81,7 @@ export default function Users({ showToast }) {
       {users == null ? <div className="card">Loading…</div>
        : users.length === 0 ? <EmptyState>No users.</EmptyState>
        : (
+        <div className="table-wrap">
         <table className="table">
           <thead><tr>
             <th>Username</th><th>Email</th><th>Role</th><th>Active</th><th className="right">Actions</th>
@@ -108,6 +109,7 @@ export default function Users({ showToast }) {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </div>
   );

@@ -151,7 +151,7 @@ export default function ResourcePage({
       ) : items.length === 0 ? (
         <EmptyState>No {title.toLowerCase()} yet.</EmptyState>
       ) : (
-        <div style={{ overflowX: 'auto' }}>
+        <div className="table-wrap">
           <table className="table">
             <thead>
               <tr>
