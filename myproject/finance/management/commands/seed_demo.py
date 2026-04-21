@@ -67,12 +67,18 @@ class Command(BaseCommand):
         usd, _ = Currency.objects.get_or_create(code='USD', defaults={'name': 'US Dollar'})
         eur, _ = Currency.objects.get_or_create(code='EUR', defaults={'name': 'Euro'})
         aed, _ = Currency.objects.get_or_create(code='AED', defaults={'name': 'UAE Dirham'})
+        lbp, _ = Currency.objects.get_or_create(code='LBP', defaults={'name': 'Lebanese Pound'})
+        sar, _ = Currency.objects.get_or_create(code='SAR', defaults={'name': 'Saudi Riyal'})
+        try_, _ = Currency.objects.get_or_create(code='TRY', defaults={'name': 'Turkish Lira'})
 
         today = date.today()
-        # FX rates
+        # FX rates (1 unit of currency in USD)
         FxRate.objects.update_or_create(currency=usd, date=today, defaults={'rate_to_usd': Decimal('1')})
         FxRate.objects.update_or_create(currency=eur, date=today, defaults={'rate_to_usd': Decimal('1.08')})
         FxRate.objects.update_or_create(currency=aed, date=today, defaults={'rate_to_usd': Decimal('0.27')})
+        FxRate.objects.update_or_create(currency=lbp, date=today, defaults={'rate_to_usd': Decimal('0.00001117')})
+        FxRate.objects.update_or_create(currency=sar, date=today, defaults={'rate_to_usd': Decimal('0.2667')})
+        FxRate.objects.update_or_create(currency=try_, date=today, defaults={'rate_to_usd': Decimal('0.0260')})
 
         # Accounts
         bank, _ = Account.objects.get_or_create(
