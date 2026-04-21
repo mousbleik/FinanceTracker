@@ -2,13 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { fmt, today, firstOfMonth } from '../components/helpers.jsx';
 
-export default function Reports() {
+export default function Reports({ showToast }) {
   const [tab, setTab] = useState('pnl');
   const [from, setFrom] = useState(firstOfMonth());
   const [to, setTo] = useState(today());
   const [asOf, setAsOf] = useState(today());
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     setError(null); setData(null);
@@ -18,6 +19,7 @@ export default function Reports() {
     call.then(setData).catch(e => setError(e));
   }, [tab, from, to, asOf]);
 
+  const reportName = tab === 'balance' ? 'balance-sheet' : tab === 'cash' ? 'cashflow' : 'pnl';
   const csvUrl = tab === 'balance'
     ? api.reportCsvUrl('balance-sheet', { as_of: asOf })
     : tab === 'cash'
@@ -25,14 +27,30 @@ export default function Reports() {
       : api.reportCsvUrl('pnl', { from, to });
 
   async function download() {
-    const res = await fetch(csvUrl, { headers: { Authorization: `Token ${api.token.get()}` } });
-    if (!res.ok) return;
-    const blob = await res.blob();
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = csvUrl.split('/').filter(Boolean).slice(-1)[0] + '.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
+    setDownloading(true);
+    try {
+      const res = await fetch(csvUrl, { headers: { Authorization: `Token ${api.token.get()}` } });
+      if (!res.ok) {
+        const text = await res.text().catch(() => '');
+        throw new Error(text || `Download failed (${res.status})`);
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const suffix = tab === 'balance' ? asOf : `${from}_to_${to}`;
+      a.download = `${reportName}_${suffix}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 0);
+    } catch (err) {
+      showToast?.(err.message, 'error');
+    } finally {
+      setDownloading(false);
+    }
   }
 
   return (
@@ -52,7 +70,7 @@ export default function Reports() {
             <div className="form-row"><label>To</label><input type="date" value={to} onChange={e => setTo(e.target.value)} /></div>
           </>
         )}
-        <button className="btn" onClick={download}>Download CSV</button>
+        <button className="btn" onClick={download} disabled={downloading}>{downloading ? 'Downloading…' : 'Download CSV'}</button>
       </div>
 
       {error && <div className="card" style={{ color: 'var(--danger)' }}>{error.message}</div>}
