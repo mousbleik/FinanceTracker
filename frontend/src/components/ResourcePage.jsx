@@ -190,7 +190,12 @@ export function useOptions(resource, labelKey = 'name') {
   useEffect(() => {
     api.list(resource).then(r => {
       const items = r.results || r;
-      setOpts(items.map(i => ({ value: i.id, label: i[labelKey] || i.code || `#${i.id}` })));
+      setOpts(items.map(i => {
+        const primary = i[labelKey] || i.code || `#${i.id}`;
+        const label = resource === 'customers' && i.code && i.name
+          ? `${i.code} — ${i.name}` : primary;
+        return { value: i.id, label };
+      }));
     }).catch(() => setOpts([]));
   }, [resource, labelKey]);
   return opts;

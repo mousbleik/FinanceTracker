@@ -13,6 +13,7 @@ export default function Customers({ showToast }) {
         { key: 'external_id', label: 'External ID' },
       ]}
       columns={[
+        { key: 'code', label: 'Customer ID' },
         { key: 'name', label: 'Name' },
         { key: 'email', label: 'Email' },
         { key: 'external_id', label: 'External ID' },

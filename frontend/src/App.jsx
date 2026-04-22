@@ -20,6 +20,8 @@ import Reports from './pages/Reports.jsx';
 import Users from './pages/Users.jsx';
 import Broadcast from './pages/Broadcast.jsx';
 import AuditLogs from './pages/AuditLogs.jsx';
+import Notifications from './pages/Notifications.jsx';
+import NotificationBell from './components/NotificationBell.jsx';
 
 const NAV = [
   { to: '/', label: 'Dashboard', icon: '■', section: 'Main' },
@@ -28,6 +30,7 @@ const NAV = [
   { to: '/payments', label: 'Payments', icon: '↯' },
   { to: '/reports', label: 'Reports', icon: '∑' },
   { to: '/imports', label: 'Imports', icon: '⇪' },
+  { to: '/notifications', label: 'Notifications', icon: '🔔' },
   { to: '/tasks', label: 'Tasks', icon: '✓', section: 'Operations' },
   { to: '/accounts', label: 'Accounts', icon: '$' },
   { to: '/vendors', label: 'Vendors', icon: '◈' },
@@ -98,6 +101,7 @@ function Shell({ user, onLogout, children }) {
           <button className="icon-btn" onClick={() => setDark(d => !d)} aria-label="Toggle dark mode">
             {dark ? '☀' : '☾'}<span className="dark-toggle-label">&nbsp;{dark ? 'Light' : 'Dark'}</span>
           </button>
+          <NotificationBell />
           <span className="user-info">{user?.username} · {user?.role}</span>
           <button className="icon-btn" onClick={onLogout}>Log out</button>
         </div>
@@ -172,6 +176,7 @@ export default function App() {
         <Route path="/users" element={<Users showToast={showToast} />} />
         <Route path="/broadcast" element={<Broadcast showToast={showToast} />} />
         <Route path="/audit" element={<AuditLogs showToast={showToast} />} />
+        <Route path="/notifications" element={<Notifications showToast={showToast} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       {toast && <div className={`toast ${toast.kind}`}>{toast.message}</div>}

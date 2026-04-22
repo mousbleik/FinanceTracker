@@ -21,6 +21,7 @@ router.register(r'users', views.UserViewSet, basename='user')
 router.register(r'tasks', views.TaskViewSet, basename='task')
 router.register(r'task-comments', views.TaskCommentViewSet, basename='taskcomment')
 router.register(r'audit-logs', views.AuditLogViewSet, basename='auditlog')
+router.register(r'notifications', views.NotificationViewSet, basename='notification')
 
 
 urlpatterns = [

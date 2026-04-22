@@ -16,12 +16,17 @@ from rest_framework.views import APIView
 from django.core.mail import EmailMessage
 from django.conf import settings as dj_settings
 
+from django.utils import timezone
+
+from rest_framework.decorators import action
+
 from .models import (
     Currency, FxRate, Account, Category, Vendor, Customer,
     Order, Expense, Asset, Liability, Payment, ImportBatch,
-    Task, TaskComment, AuditLog,
+    Task, TaskComment, AuditLog, Notification,
 )
 from .audit import log as audit_log
+from .notifications import notify, admin_users
 from .serializers import (
     CurrencySerializer, FxRateSerializer, AccountSerializer,
     CategorySerializer, VendorSerializer, CustomerSerializer,
@@ -29,12 +34,18 @@ from .serializers import (
     LiabilitySerializer, PaymentSerializer, ImportBatchSerializer,
     LoginSerializer, UserSerializer, CreateUserSerializer,
     TaskSerializer, TaskCommentSerializer, BroadcastEmailSerializer,
-    AuditLogSerializer,
+    AuditLogSerializer, NotificationSerializer,
 )
 from .permissions import (
     AdminOrStandardReadWrite, IsAdmin, is_admin, ADMIN_GROUP, STANDARD_GROUP,
 )
 from . import reports, importers
+
+
+def _actor_name(user):
+    if user is None or not getattr(user, 'is_authenticated', False):
+        return 'Someone'
+    return user.get_full_name() or user.username
 
 
 # ---- Auth ----
@@ -181,10 +192,32 @@ class VendorViewSet(BaseFinanceViewSet):
     queryset = Vendor.objects.all()
     serializer_class = VendorSerializer
 
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        instance = serializer.instance
+        notify(
+            admin_users(exclude_user=self.request.user),
+            Notification.VENDOR_CREATED,
+            title=f'New vendor: {instance.name}',
+            body=f'Added by {_actor_name(self.request.user)}.',
+            target=instance, url=f'/vendors', actor=self.request.user,
+        )
+
 
 class CustomerViewSet(BaseFinanceViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        instance = serializer.instance
+        notify(
+            admin_users(exclude_user=self.request.user),
+            Notification.CUSTOMER_CREATED,
+            title=f'New customer: {instance.code or instance.name}',
+            body=f'{instance.name} added by {_actor_name(self.request.user)}.',
+            target=instance, url=f'/customers', actor=self.request.user,
+        )
 
 
 class OrderViewSet(BaseFinanceViewSet):
@@ -205,6 +238,18 @@ class OrderViewSet(BaseFinanceViewSet):
         if p.get('q'):
             qs = qs.filter(external_id__icontains=p['q'])
         return qs
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        instance = serializer.instance
+        who = instance.customer.name if instance.customer_id else '(guest)'
+        notify(
+            admin_users(exclude_user=self.request.user),
+            Notification.ORDER_CREATED,
+            title=f'New order {instance.total} {instance.currency.code}',
+            body=f'{who} — added by {_actor_name(self.request.user)}.',
+            target=instance, url=f'/orders', actor=self.request.user,
+        )
 
 
 class PaymentFilterMixin:
@@ -243,20 +288,67 @@ class ExpenseViewSet(BaseFinanceViewSet):
             qs = qs.filter(memo__icontains=p['q'])
         return qs
 
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        instance = serializer.instance
+        vendor = instance.vendor.name if instance.vendor_id else ''
+        memo = instance.memo or vendor or 'Expense'
+        notify(
+            admin_users(exclude_user=self.request.user),
+            Notification.EXPENSE_CREATED,
+            title=f'New expense {instance.amount} {instance.currency.code}',
+            body=f'{memo} — added by {_actor_name(self.request.user)}.',
+            target=instance, url=f'/expenses', actor=self.request.user,
+        )
+
 
 class AssetViewSet(BaseFinanceViewSet):
     queryset = Asset.objects.select_related('currency', 'category', 'account').all()
     serializer_class = AssetSerializer
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        instance = serializer.instance
+        notify(
+            admin_users(exclude_user=self.request.user),
+            Notification.ASSET_CREATED,
+            title=f'New asset: {instance.name}',
+            body=f'{instance.cost} {instance.currency.code} — added by {_actor_name(self.request.user)}.',
+            target=instance, url=f'/assets', actor=self.request.user,
+        )
 
 
 class LiabilityViewSet(BaseFinanceViewSet):
     queryset = Liability.objects.select_related('currency', 'account').all()
     serializer_class = LiabilitySerializer
 
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        instance = serializer.instance
+        notify(
+            admin_users(exclude_user=self.request.user),
+            Notification.LIABILITY_CREATED,
+            title=f'New liability: {instance.name}',
+            body=f'Balance {instance.balance} {instance.currency.code} — added by {_actor_name(self.request.user)}.',
+            target=instance, url=f'/liabilities', actor=self.request.user,
+        )
+
 
 class PaymentViewSet(PaymentFilterMixin, BaseFinanceViewSet):
     queryset = Payment.objects.select_related('account', 'currency', 'order', 'expense', 'liability').all()
     serializer_class = PaymentSerializer
+
+    def perform_create(self, serializer):
+        super().perform_create(serializer)
+        instance = serializer.instance
+        dir_label = 'Incoming' if instance.direction == Payment.IN else 'Outgoing'
+        notify(
+            admin_users(exclude_user=self.request.user),
+            Notification.PAYMENT_CREATED,
+            title=f'{dir_label} payment {instance.amount} {instance.currency.code}',
+            body=f'{instance.account.name} — added by {_actor_name(self.request.user)}.',
+            target=instance, url=f'/payments', actor=self.request.user,
+        )
 
 
 # ---- Tasks ----
@@ -283,13 +375,55 @@ class TaskViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
+        task = serializer.save(created_by=self.request.user)
+        if task.assigned_to_id and task.assigned_to_id != getattr(self.request.user, 'id', None):
+            notify(
+                [task.assigned_to], Notification.TASK_ASSIGNED,
+                title=f'Task assigned: {task.title}',
+                body=f'Assigned by {_actor_name(self.request.user)}.',
+                target=task, url=f'/tasks', actor=self.request.user,
+            )
 
     def update(self, request, *args, **kwargs):
         task = self.get_object()
         if not is_admin(request.user) and task.assigned_to_id != request.user.id and task.created_by_id != request.user.id:
             return Response({'detail': 'Only admins or the task owner can edit.'}, status=403)
+        self._pre_update_snapshot = {
+            'status': task.status,
+            'assigned_to_id': task.assigned_to_id,
+        }
         return super().update(request, *args, **kwargs)
+
+    def perform_update(self, serializer):
+        task = serializer.save()
+        snap = getattr(self, '_pre_update_snapshot', {})
+        actor = self.request.user
+        # Notify on status changes — inform creator + assignee (except the actor).
+        if snap.get('status') is not None and snap['status'] != task.status:
+            recipients = set()
+            if task.created_by_id and task.created_by_id != getattr(actor, 'id', None):
+                recipients.add(task.created_by)
+            if task.assigned_to_id and task.assigned_to_id != getattr(actor, 'id', None):
+                recipients.add(task.assigned_to)
+            # Admins also want to see task status changes when a standard user moves them.
+            for a in admin_users(exclude_user=actor):
+                recipients.add(a)
+            if recipients:
+                notify(
+                    list(recipients), Notification.TASK_STATUS,
+                    title=f'Task "{task.title}" — {task.get_status_display()}',
+                    body=f'Status changed by {_actor_name(actor)} (was {snap["status"]}).',
+                    target=task, url=f'/tasks', actor=actor,
+                )
+        # Notify new assignee if assignment changed.
+        if snap.get('assigned_to_id') != task.assigned_to_id and task.assigned_to_id \
+                and task.assigned_to_id != getattr(actor, 'id', None):
+            notify(
+                [task.assigned_to], Notification.TASK_ASSIGNED,
+                title=f'Task assigned: {task.title}',
+                body=f'Assigned by {_actor_name(actor)}.',
+                target=task, url=f'/tasks', actor=actor,
+            )
 
     def partial_update(self, request, *args, **kwargs):
         kwargs['partial'] = True
@@ -313,7 +447,65 @@ class TaskCommentViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        comment = serializer.save(author=self.request.user)
+        task = comment.task
+        actor = self.request.user
+        recipients = set()
+        if task.created_by_id and task.created_by_id != getattr(actor, 'id', None):
+            recipients.add(task.created_by)
+        if task.assigned_to_id and task.assigned_to_id != getattr(actor, 'id', None):
+            recipients.add(task.assigned_to)
+        for a in admin_users(exclude_user=actor):
+            recipients.add(a)
+        if recipients:
+            body = (comment.body or '').strip()
+            preview = body[:140] + ('…' if len(body) > 140 else '')
+            notify(
+                list(recipients), Notification.TASK_COMMENT,
+                title=f'Comment on "{task.title}"',
+                body=f'{_actor_name(actor)}: {preview}',
+                target=task, url=f'/tasks', actor=actor,
+            )
+
+
+# ---- Notifications ----
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    """List the authenticated user's notifications and mark them read."""
+    serializer_class = NotificationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        qs = Notification.objects.filter(recipient=self.request.user)
+        p = self.request.query_params
+        if p.get('unread') in ('1', 'true', 'yes'):
+            qs = qs.filter(read_at__isnull=True)
+        if p.get('kind'):
+            qs = qs.filter(kind=p['kind'])
+        return qs
+
+    @action(detail=True, methods=['post'])
+    def mark_read(self, request, pk=None):
+        n = get_object_or_404(Notification, pk=pk, recipient=request.user)
+        if n.read_at is None:
+            n.read_at = timezone.now()
+            n.save(update_fields=['read_at'])
+        return Response(NotificationSerializer(n).data)
+
+    @action(detail=False, methods=['post'])
+    def mark_all_read(self, request):
+        now = timezone.now()
+        updated = Notification.objects.filter(
+            recipient=request.user, read_at__isnull=True
+        ).update(read_at=now)
+        return Response({'updated': updated})
+
+    @action(detail=False, methods=['get'])
+    def unread_count(self, request):
+        count = Notification.objects.filter(
+            recipient=request.user, read_at__isnull=True
+        ).count()
+        return Response({'count': count})
 
 
 # ---- Admin broadcast email ----
@@ -348,6 +540,15 @@ class BroadcastEmailView(APIView):
             AuditLog.EMAIL_BROADCAST, user=request.user, request=request,
             target_type='Broadcast',
             description=f'Sent "{subject}" to {len(recipients)} standard user(s) with {len(attachments)} attachment(s)',
+        )
+        standard_users = list(
+            User.objects.filter(groups__name=STANDARD_GROUP, is_active=True).distinct()
+        )
+        notify(
+            standard_users, Notification.BROADCAST_SENT,
+            title=f'Announcement: {subject}',
+            body=(body or '')[:500],
+            url='', actor=request.user,
         )
         return Response({'sent': len(recipients), 'recipients': recipients})
 
@@ -404,6 +605,13 @@ class _ImportBase(APIView):
         audit_log(
             AuditLog.IMPORT_RUN, user=request.user, request=request, target=batch,
             description=f'Imported {batch.success_count}/{batch.row_count} rows ({self.source})',
+        )
+        notify(
+            admin_users(exclude_user=request.user),
+            Notification.IMPORT_DONE,
+            title=f'Import finished: {batch.get_source_display()}',
+            body=f'{batch.success_count}/{batch.row_count} rows imported by {_actor_name(request.user)}.',
+            target=batch, url='/imports', actor=request.user,
         )
         return Response(ImportBatchSerializer(batch).data, status=201)
 

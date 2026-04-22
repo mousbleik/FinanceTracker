@@ -101,6 +101,7 @@ class Vendor(models.Model):
 
 
 class Customer(models.Model):
+    code = models.CharField(max_length=32, unique=True, blank=True, db_index=True)
     name = models.CharField(max_length=128)
     email = models.EmailField(blank=True)
     external_id = models.CharField(max_length=128, blank=True, db_index=True)
@@ -109,7 +110,14 @@ class Customer(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        return f'{self.code} {self.name}' if self.code else self.name
+
+    def save(self, *args, **kwargs):
+        needs_code = not self.code
+        super().save(*args, **kwargs)
+        if needs_code:
+            self.code = f'CUST-{self.pk:05d}'
+            super().save(update_fields=['code'])
 
 
 class Order(models.Model):
@@ -350,6 +358,61 @@ class AuditLog(models.Model):
     def __str__(self):
         who = self.username or (self.user.username if self.user_id else 'anon')
         return f'{self.timestamp:%Y-%m-%d %H:%M} {who} {self.action}'
+
+
+class Notification(models.Model):
+    ORDER_CREATED = 'order_created'
+    EXPENSE_CREATED = 'expense_created'
+    PAYMENT_CREATED = 'payment_created'
+    ASSET_CREATED = 'asset_created'
+    LIABILITY_CREATED = 'liability_created'
+    CUSTOMER_CREATED = 'customer_created'
+    VENDOR_CREATED = 'vendor_created'
+    TASK_ASSIGNED = 'task_assigned'
+    TASK_STATUS = 'task_status_changed'
+    TASK_COMMENT = 'task_commented'
+    IMPORT_DONE = 'import_completed'
+    BROADCAST_SENT = 'broadcast_sent'
+    KIND_CHOICES = [
+        (ORDER_CREATED, 'Order created'),
+        (EXPENSE_CREATED, 'Expense created'),
+        (PAYMENT_CREATED, 'Payment created'),
+        (ASSET_CREATED, 'Asset created'),
+        (LIABILITY_CREATED, 'Liability created'),
+        (CUSTOMER_CREATED, 'Customer created'),
+        (VENDOR_CREATED, 'Vendor created'),
+        (TASK_ASSIGNED, 'Task assigned'),
+        (TASK_STATUS, 'Task status changed'),
+        (TASK_COMMENT, 'Task commented'),
+        (IMPORT_DONE, 'Import completed'),
+        (BROADCAST_SENT, 'Broadcast sent'),
+    ]
+
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notifications',
+    )
+    actor = models.ForeignKey(
+        settings.AUTH_USER_MODEL, null=True, blank=True,
+        on_delete=models.SET_NULL, related_name='+',
+    )
+    kind = models.CharField(max_length=32, choices=KIND_CHOICES)
+    title = models.CharField(max_length=200)
+    body = models.TextField(blank=True)
+    target_type = models.CharField(max_length=64, blank=True)
+    target_id = models.CharField(max_length=64, blank=True)
+    url = models.CharField(max_length=256, blank=True)
+    read_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['recipient', '-created_at']),
+            models.Index(fields=['recipient', 'read_at']),
+        ]
+
+    def __str__(self):
+        return f'{self.recipient_id}: {self.kind} — {self.title}'
 
 
 class ImportBatch(models.Model):

@@ -90,4 +90,16 @@ export const api = {
   },
   broadcast: (formData) =>
     request('/api/broadcast/email/', { method: 'POST', body: formData, isForm: true }),
+
+  notifications: {
+    list: (params = {}) => {
+      const qs = new URLSearchParams(
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== '')
+      ).toString();
+      return request(`/api/notifications/${qs ? '?' + qs : ''}`);
+    },
+    unreadCount: () => request('/api/notifications/unread_count/'),
+    markRead: (id) => request(`/api/notifications/${id}/mark_read/`, { method: 'POST' }),
+    markAllRead: () => request('/api/notifications/mark_all_read/', { method: 'POST' }),
+  },
 };

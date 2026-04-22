@@ -46,6 +46,7 @@ export default function Orders({ showToast }) {
       columns={[
         { key: 'placed_at', label: 'Date' },
         { key: 'external_id', label: 'Order #' },
+        { key: 'customer_code', label: 'Customer ID' },
         { key: 'customer_name', label: 'Customer' },
         { key: 'status', label: 'Status', type: 'badge' },
         { key: 'total', label: 'Total', type: 'money', right: true },

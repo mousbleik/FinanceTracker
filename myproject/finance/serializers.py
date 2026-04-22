@@ -5,7 +5,7 @@ from rest_framework.authtoken.models import Token
 from .models import (
     Currency, FxRate, Account, Category, Vendor, Customer,
     Order, OrderItem, Expense, Asset, Liability, Payment, ImportBatch,
-    Task, TaskComment, AuditLog,
+    Task, TaskComment, AuditLog, Notification,
 )
 from .permissions import ADMIN_GROUP, STANDARD_GROUP, is_admin
 
@@ -47,7 +47,8 @@ class VendorSerializer(serializers.ModelSerializer):
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
-        fields = ['id', 'name', 'email', 'external_id']
+        fields = ['id', 'code', 'name', 'email', 'external_id']
+        read_only_fields = ['code']
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -60,11 +61,12 @@ class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, required=False)
     currency_code = serializers.CharField(source='currency.code', read_only=True)
     customer_name = serializers.CharField(source='customer.name', read_only=True, default='')
+    customer_code = serializers.CharField(source='customer.code', read_only=True, default='')
 
     class Meta:
         model = Order
         fields = [
-            'id', 'external_id', 'source', 'customer', 'customer_name',
+            'id', 'external_id', 'source', 'customer', 'customer_name', 'customer_code',
             'placed_at', 'currency', 'currency_code', 'subtotal', 'tax',
             'shipping', 'total', 'status', 'notes', 'items', 'created_at',
         ]
@@ -145,6 +147,24 @@ class AuditLogSerializer(serializers.ModelSerializer):
         model = AuditLog
         fields = ['id', 'timestamp', 'user', 'username', 'action',
                   'target_type', 'target_id', 'description', 'ip']
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    actor_username = serializers.CharField(source='actor.username', read_only=True, default='')
+    kind_label = serializers.CharField(source='get_kind_display', read_only=True)
+    read = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Notification
+        fields = [
+            'id', 'kind', 'kind_label', 'title', 'body',
+            'target_type', 'target_id', 'url',
+            'actor', 'actor_username', 'read_at', 'read', 'created_at',
+        ]
+        read_only_fields = fields
+
+    def get_read(self, obj):
+        return obj.read_at is not None
 
 
 class TaskCommentSerializer(serializers.ModelSerializer):
