@@ -13,3 +13,12 @@ venv/
 
 # VS Code
 .vscode/
+
+# Frontend build artefacts
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Django media uploads
+myproject/media/
+
