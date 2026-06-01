@@ -1,0 +1,161 @@
+/* Proposal B — premium dark / branded theme.
+   Tailwind (CDN) handles layout & spacing utilities in the markup; this file
+   carries the brand "feel" (colours, typography, the badge itself) and also acts
+   as a graceful fallback so the page still looks intentional if Tailwind is
+   offline. Same content/wording as the legacy badge. */
+
+:root {
+  --gold: #d4af37;
+  --gold-soft: #e7c969;
+  --charcoal: #14161a;
+  --charcoal-2: #1d2026;
+  --line: rgba(255, 255, 255, 0.10);
+}
+
+body {
+  font-family: 'Jost', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background:
+    radial-gradient(1100px 500px at 80% -10%, #23272f 0%, transparent 60%),
+    linear-gradient(160deg, #0c0d10 0%, #14161a 100%);
+  color: #f2f2f0;
+}
+
+/* Layout fallbacks: applied only when Tailwind is unavailable (Tailwind's
+   runtime styles load later and override these when present). */
+main { max-width: 1040px; margin: 0 auto; padding: 40px 20px; }
+@media (min-width: 768px) {
+  main { display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: start; }
+}
+.panel { border-radius: 1rem; padding: 1.75rem; }
+.field { border-radius: 0.5rem; padding: 0.75rem 1rem; }
+.btn-gold, .btn-outline { border-radius: 0.5rem; }
+.btn-gold { padding: 0.75rem 1.5rem; }
+
+.display { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; }
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-size: 0.7rem;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+  border: 1px solid var(--line);
+  backdrop-filter: blur(6px);
+}
+
+.field {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--line);
+  color: #fff;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.18);
+}
+
+.btn-gold {
+  background: linear-gradient(180deg, var(--gold-soft), var(--gold));
+  color: #1a1407;
+  border: none;
+  cursor: pointer;
+  transition: filter .15s, transform .05s;
+}
+.btn-gold:hover { filter: brightness(1.06); }
+.btn-gold:active { transform: translateY(1px); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  cursor: pointer;
+  transition: background .15s;
+}
+.btn-outline:hover { background: rgba(212, 175, 55, 0.12); }
+
+.is-error { color: #ef8d7f; }
+.is-ok { color: var(--gold-soft); }
+
+/* ---- The badge: a landscape, lanyard-style card ---- */
+.badge {
+  position: relative;
+  width: 380px;
+  background:
+    linear-gradient(180deg, #1f2329 0%, #16181d 100%);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  padding-top: 26px;
+}
+.badge__punch {
+  position: absolute;
+  top: 12px; left: 50%; transform: translateX(-50%);
+  width: 54px; height: 9px;
+  background: #000;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+.badge__bar {
+  height: 4px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-soft));
+}
+.badge__body { padding: 26px 28px 30px; }
+.badge__event {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--gold);
+  max-width: 230px;
+  line-height: 1.3;
+}
+.badge__seal { color: var(--gold); opacity: 0.85; }
+.badge__name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-weight: 700;
+  font-size: 2.7rem;
+  line-height: 1.05;
+  margin: 26px 0 18px;
+  color: #ffffff;
+  word-break: break-word;
+}
+.badge__info { color: #b9bcc2; font-size: 0.92rem; line-height: 1.5; }
+.badge__foot {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.badge__qr { background: #fff; border-radius: 8px; padding: 6px; }
+.badge__ref { text-transform: uppercase; }
+.badge__ref span {
+  display: block;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  font-size: 1.05rem;
+}
+.badge__ref small {
+  color: var(--gold);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+}
+
+/* ---- Print: only the badge ---- */
+@media print {
+  body { background: #fff; }
+  .panel, #badgePlaceholder { display: none !important; }
+  main { display: block !important; padding: 0 !important; }
+  .badge {
+    box-shadow: none;
+    border-color: #ccc;
+    margin: 0 auto;
+    color: #111;
+  }
+}

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="110" viewBox="0 0 120 110">
+  <rect width="120" height="110" rx="6" fill="#ffffff" opacity="0.92"/>
+  <text x="60" y="48" fill="#15414a" font-family="sans-serif" font-size="15" font-weight="700" text-anchor="middle">CONF.</text>
+  <text x="60" y="68" fill="#15414a" font-family="sans-serif" font-size="15" font-weight="700" text-anchor="middle">LOGO</text>
+  <text x="60" y="92" fill="#9aa" font-family="sans-serif" font-size="8" text-anchor="middle">[placeholder]</text>
+</svg>
