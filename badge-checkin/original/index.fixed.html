@@ -1,0 +1,230 @@
+<html>
+  <head>
+    <base target="_self">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Acme|Odibee+Sans|Rakkas&display=swap" rel="stylesheet">
+    <!--Import Google Icon Font-->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- Compiled and minified CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <!--Let browser know website is optimized for mobile-->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <style>
+  .leftDiv {
+    float: left;
+    width: 35%;
+    margin: 20px;
+    padding: 15px;
+  }
+  .rightDiv {
+    float: left;
+    width: 60%;
+    margin: 10px;
+    padding: 5px;
+  }
+  .ticket-body {
+    margin: 0;
+    color: #ffffff;
+    font-family: 'Acme', sans-serif;
+    font-weight: 300;
+    font-size: 25px;
+  }
+  .ticket-container {
+    margin: auto;
+  }
+  .ticket-section {
+    position: fixed;
+    background-image: url(https://www.dragonclawacademy.com/wp-content/uploads/2017/05/kungfu-banner-1024x506.jpg);
+    background-repeat: no-repeat;
+    overflow: hidden;
+        height: 672px;
+    max-width: 400px;
+  }
+  .ticket-section .left {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    float: left;
+    width: 60%;
+    padding: 40px;
+    text-align: left;
+    margin: 5px;
+  }
+  .ticket-section .right {
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    width: 35%;
+    text-align: center;
+    box-sizing: border-box;
+    float: right;
+    padding: 30px 30px 0 0;
+  }
+  .ticket-section .event {
+    margin-bottom: 30px;
+    font-weight: 700;
+    font-size: 1.1em;
+    line-height: 35px;
+    text-align: left;
+  }
+  .ticket-section .title {
+    font-family: 'Odibee Sans', 'Rakkas', cursive;
+    margin-bottom: 0px;
+    width: 250px;
+    height: 200px;
+    color: #4AB4C4;
+    font-size: 2em;
+    line-height: 50px;
+    overflow-wrap: break-word;
+    text-align: left;
+    padding-top: 2vw;
+    text-transform: uppercase;
+    display:table-caption;
+    overflow: hidden;
+    }
+  .ticket-section .info {
+    font-size: 0.7em;
+    text-align: left;
+  }
+  .ticket-section .snb {
+    margin-bottom: 3px;
+    color: #4AB4C4;
+    font-family: "Kreon", serif;
+    font-size: 0.38em;
+    text-align: center;
+    text-transform: uppercase;
+    margin-left: 20px;
+  }
+  .ticket-section .snb span {
+    display: block;
+    width: 100%;
+    margin: 0px;
+    padding: 3px 0px;
+    color: #fff;
+    font-size: 1.1em;
+  }
+  .ticket-section .qrcode {
+    text-align: center;
+    margin: 175px 0px 0px 0px;
+  }
+  .logo {
+          height: 110px;
+    width:auto;
+  }
+  </style>
+  </head>
+  <body>
+
+   <div class="leftDiv" id="badge"></div>
+
+   <div class="container">
+   <div class="rightDiv">
+      <div class="row">
+        <div class="input-field col s12">
+        <label for="txt2"></label>
+          <input id="txt2" placeholder="Search Attendee" type="text" value="AS2020-290177" required/>
+        </div>
+        <br /><button id="searchAttendee" class="btn waves-effect waves-light" style="margin-left:20px">Search
+                <i class="material-icons right">send</i>
+                </button>
+        <div class="input-field col s3">
+          <br /><input id="txt3" type="text" placeholder="Search Column Number" value="6" />
+        </div>
+        <div class="input-field col s1">
+          <br /><input id="txt1" type="text" placeholder="Sheet Name" value="Search"/>
+        </div>
+        <div class="input-field col s1">
+          <br /><input id="txt4" type="text" placeholder="Start Row" value="2"/>
+        </div>
+        <div class="input-field col s1">
+          <br /><input id="txt5" type="text" placeholder="1XNva02kvWtFcMYwnWyYHxdulT5fGUuDw9ODxTgBaxZE" />
+        </div>
+        <div class="input-field col s1">
+          <textarea id="found" placeholder="Search Result"class="materialize-textarea" rows="2" cols="50"></textarea>
+        </div>
+
+       </div> <!-- Close row -->
+
+       <div id="attendeeInfo">
+         <h5>Attendee Information:</h5>
+         <p id="fullName"></p>
+         <p id="email"></p>
+         <p id="phone"></p>
+         <p id="scfhs"></p>
+         <p id="snb"></p>
+       </div>
+       </div> <!-- Close rightDiv -->
+
+     </div> <!-- Close container -->
+
+
+    <script>
+    document.getElementById("searchAttendee").addEventListener("click", addRecord);
+
+    function addRecord() {
+    var searchBox = document.getElementById("txt2");
+
+      var search = searchBox.value;
+
+      var data = {
+      search: searchBox.value
+      };
+
+      google.script.run.appendData(data);
+
+      searchAttendee();
+      }
+
+    function searchAttendee() {
+    var s1=$('#txt1').val();
+    var s2=$('#txt2').val();
+    var s3=$('#txt3').val();
+    var s4=$('#txt4').val();
+    var s5=$('#txt5').val();
+    google.script.run
+    .withSuccessHandler(function(sObj){
+      $('#found').val(sObj.found);
+    })
+    .findNeedleInHaystack({haystack:s1,needle:s2,column:s3,startrow:s4,id:s5});
+    runBadge();
+    }
+
+    function runBadge() {
+      setTimeout(function() {
+      var attendee = document.getElementById("found").value;
+      var fullName = attendee.split(",",2);
+      var fname = fullName.splice(0,1);
+      var lname = fullName.splice(0,1);
+      var emailValue = attendee.split(",",3);
+      var email = emailValue.splice(2,1);
+      var phoneValue = attendee.split(",",4);
+      var phone = phoneValue.splice(3,1);
+      var scfhsValue = attendee.split(",",5);
+      var scfhs = scfhsValue.splice(4,1);
+      var snbValue = attendee.split(",",6);
+      var snb = snbValue.splice(5,1);
+
+      document.getElementById('fullName').innerHTML = fname + " " + lname;
+      document.getElementById('email').innerHTML = email;
+      document.getElementById('phone').innerHTML = phone;
+      document.getElementById('scfhs').innerHTML = scfhs;
+      document.getElementById('snb').innerHTML = snb;
+
+      var badgeCode = "<button onclick='printBadge()' class='btn waves-effect waves-light' style='margin-bottom:20px'>Print Badge<i class='material-icons right'>send</i></button><br><div id='printArea'><div class='ticket-container'><div class='ticket-body'><div class='ticket-section'><div class='left'><div class='event'>Anesthesia Symposium 2020</div><div class='title'>" + fname + " " + lname + "</div><div class='info'>March 1 - 4, 2019,<br>KFSHRC - Riyadh, Saudi Arabia</div></div><div class='right'><img class='logo' src='https://www.globalhealthsaudi.com/content/informa/health-2030/en/_jcr_content/header_ipar/column_control/par-col-1/column_control_copy/par-col-1/column_control/par-col-2/image.img.png/1555838403953.png' alt='Conf. Logo'><div class='qrcode'><img src='https://chart.googleapis.com/chart?chs=130x130&chld=M|0&cht=qr&chco=4F5E6D&chl=" + snb + "' alt='QR CODE'><div class='snb'><span>" + snb + "</span>Ref. Number</div></div></div></div></div></div></div>";
+      document.getElementById('badge').innerHTML = badgeCode;},4000);
+      }
+
+      function printBadge() {
+      var printArea = document.getElementById('printArea').innerHTML;
+      w=window.open();
+      w.document.write(printArea);
+      w.document.close();
+      w.focus();
+      w.print();
+      w.close();
+      }
+  </script>
+
+  </body>
+</html>

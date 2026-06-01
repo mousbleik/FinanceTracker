@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attendee Check-in &middot; Anesthesia Symposium 2020</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page">
+    <!-- Search / lookup panel -->
+    <section class="panel" aria-label="Attendee lookup">
+      <h1 class="panel__title">Attendee Check-in</h1>
+      <p class="panel__subtitle">Search by reference number or name, then print the badge.</p>
+
+      <form id="searchForm" class="search" autocomplete="off">
+        <label for="search" class="search__label">Search Attendee</label>
+        <div class="search__row">
+          <input id="search" class="search__input" type="text" value="AS2020-290177"
+                 placeholder="e.g. AS2020-290177 or John" required />
+          <button type="submit" class="btn">Search</button>
+        </div>
+        <p id="searchMsg" class="search__msg" role="status" aria-live="polite"></p>
+      </form>
+
+      <div id="attendeeInfo" class="info" hidden>
+        <h2 class="info__title">Attendee Information</h2>
+        <dl class="info__list">
+          <div><dt>Name</dt><dd id="infoName"></dd></div>
+          <div><dt>Email</dt><dd id="infoEmail"></dd></div>
+          <div><dt>Phone</dt><dd id="infoPhone"></dd></div>
+          <div><dt>SCFHS</dt><dd id="infoScfhs"></dd></div>
+          <div><dt>Ref. Number</dt><dd id="infoRef"></dd></div>
+        </dl>
+        <button id="printBtn" type="button" class="btn btn--ghost">Print Badge</button>
+      </div>
+    </section>
+
+    <!-- Badge preview -->
+    <section class="badge-stage" aria-label="Badge preview">
+      <div id="badge" class="badge" hidden>
+        <header class="badge__head">
+          <div class="badge__event" id="badgeEvent"></div>
+          <div class="badge__logo" aria-hidden="true">
+            <svg viewBox="0 0 120 120" width="56" height="56">
+              <circle cx="60" cy="60" r="56" fill="none" stroke="#4AB4C4" stroke-width="6"/>
+              <path d="M38 74 L60 34 L82 74 Z" fill="none" stroke="#4AB4C4" stroke-width="6" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </header>
+
+        <div class="badge__name" id="badgeName"></div>
+
+        <div class="badge__info" id="badgeInfo"></div>
+
+        <footer class="badge__foot">
+          <img class="badge__qr" id="badgeQr" alt="QR code" width="120" height="120" />
+          <div class="badge__ref">
+            <span id="badgeRef"></span>
+            <small>Ref. Number</small>
+          </div>
+        </footer>
+      </div>
+      <p id="badgePlaceholder" class="badge-stage__hint">The badge will appear here after a successful search.</p>
+    </section>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

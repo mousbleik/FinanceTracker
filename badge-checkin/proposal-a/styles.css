@@ -1,0 +1,176 @@
+/* Proposal A — modern light theme, zero-framework custom CSS.
+   Same content/wording as the legacy badge, rebuilt for clarity, responsiveness
+   and accessibility. */
+
+:root {
+  --teal: #4AB4C4;
+  --teal-dark: #2f8c9a;
+  --ink: #1f2a30;
+  --muted: #6b7a82;
+  --line: #e4e9ec;
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --radius: 14px;
+  --shadow: 0 10px 30px rgba(31, 42, 48, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+.page {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 28px;
+  align-items: start;
+}
+
+/* ---- Search panel ---- */
+.panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+.panel__title { margin: 0 0 4px; font-size: 1.6rem; }
+.panel__subtitle { margin: 0 0 22px; color: var(--muted); }
+
+.search__label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.search__row { display: flex; gap: 10px; }
+.search__input {
+  flex: 1;
+  padding: 12px 14px;
+  font-size: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.search__input:focus {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 3px rgba(74, 180, 196, .2);
+}
+.search__msg { min-height: 1.2em; margin: 10px 2px 0; font-size: 0.9rem; }
+.search__msg.is-error { color: #c0392b; }
+.search__msg.is-ok { color: var(--teal-dark); }
+
+.btn {
+  appearance: none;
+  border: none;
+  background: var(--teal);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  padding: 12px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background .15s, transform .05s;
+}
+.btn:hover { background: var(--teal-dark); }
+.btn:active { transform: translateY(1px); }
+.btn--ghost {
+  background: transparent;
+  color: var(--teal-dark);
+  border: 1px solid var(--teal);
+  margin-top: 18px;
+}
+.btn--ghost:hover { background: rgba(74, 180, 196, .1); }
+
+/* ---- Attendee info ---- */
+.info { margin-top: 26px; border-top: 1px solid var(--line); padding-top: 20px; }
+.info__title { font-size: 1.05rem; margin: 0 0 14px; }
+.info__list { margin: 0; display: grid; gap: 10px; }
+.info__list > div {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  align-items: baseline;
+}
+.info__list dt { color: var(--muted); font-size: 0.85rem; }
+.info__list dd { margin: 0; font-weight: 600; }
+
+/* ---- Badge stage ---- */
+.badge-stage {
+  position: sticky;
+  top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.badge-stage__hint { color: var(--muted); text-align: center; padding: 40px 10px; }
+
+/* ---- Badge ---- */
+.badge {
+  width: 360px;
+  background: linear-gradient(160deg, #0e2b30 0%, #15414a 60%, #0a1c20 100%);
+  color: #fff;
+  border-radius: 18px;
+  padding: 28px 26px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+}
+.badge__head { display: flex; justify-content: space-between; align-items: flex-start; }
+.badge__event {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  letter-spacing: .5px;
+  font-size: 1.15rem;
+  max-width: 220px;
+  line-height: 1.25;
+  text-transform: uppercase;
+}
+.badge__logo { background: rgba(255,255,255,.06); border-radius: 12px; padding: 8px; }
+.badge__name {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--teal);
+  font-size: 2.4rem;
+  line-height: 1.05;
+  margin: 32px 0;
+  word-break: break-word;
+}
+.badge__info { color: #cfe6ea; font-size: 0.95rem; }
+.badge__foot {
+  margin-top: 34px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-top: 1px solid rgba(255,255,255,.12);
+  padding-top: 20px;
+}
+.badge__qr { background: #fff; border-radius: 8px; padding: 6px; }
+.badge__ref { text-transform: uppercase; }
+.badge__ref span { display: block; font-weight: 700; letter-spacing: 1px; }
+.badge__ref small { color: var(--teal); font-size: 0.7rem; letter-spacing: 1.5px; }
+
+/* ---- Responsive ---- */
+@media (max-width: 880px) {
+  .page { grid-template-columns: 1fr; }
+  .badge-stage { position: static; }
+}
+
+/* ---- Print: only the badge ---- */
+@media print {
+  body { background: #fff; }
+  .panel, .badge-stage__hint { display: none !important; }
+  .page { display: block; padding: 0; }
+  .badge { box-shadow: none; margin: 0 auto; }
+}

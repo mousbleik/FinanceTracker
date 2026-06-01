@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Check-in &middot; Anesthesia Symposium 2020</title>
+  <!-- Different stack from Proposal A: Tailwind CSS via CDN for layout/utilities. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- Small self-sufficient theme layer (also a graceful fallback if Tailwind is offline). -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="min-h-screen text-zinc-100">
+  <main class="max-w-5xl mx-auto px-5 py-10 grid gap-10 md:grid-cols-[1fr_auto] items-start">
+
+    <!-- Lookup panel -->
+    <section class="panel rounded-2xl p-7" aria-label="Attendee lookup">
+      <p class="eyebrow">Conference Desk</p>
+      <h1 class="display text-3xl mb-1">Attendee Check-in</h1>
+      <p class="text-sm text-zinc-400 mb-6">Search by reference number or name to issue a badge.</p>
+
+      <form id="searchForm" autocomplete="off">
+        <label for="search" class="block text-xs uppercase tracking-widest text-zinc-400 mb-2">Search Attendee</label>
+        <div class="flex gap-3">
+          <input id="search" type="text" value="AS2020-290177"
+                 placeholder="e.g. AS2020-290177 or John"
+                 class="field flex-1 rounded-lg px-4 py-3" required />
+          <button type="submit" class="btn-gold rounded-lg px-6 py-3 font-semibold">Search</button>
+        </div>
+        <p id="searchMsg" class="text-sm mt-3 min-h-[1.2em]" role="status" aria-live="polite"></p>
+      </form>
+
+      <div id="attendeeInfo" class="mt-7 pt-6 border-t border-white/10" hidden>
+        <h2 class="display text-lg mb-4">Attendee Information</h2>
+        <dl class="grid gap-3 text-sm">
+          <div class="grid grid-cols-[110px_1fr] gap-3"><dt class="text-zinc-400">Name</dt><dd id="infoName" class="font-semibold"></dd></div>
+          <div class="grid grid-cols-[110px_1fr] gap-3"><dt class="text-zinc-400">Email</dt><dd id="infoEmail" class="font-semibold"></dd></div>
+          <div class="grid grid-cols-[110px_1fr] gap-3"><dt class="text-zinc-400">Phone</dt><dd id="infoPhone" class="font-semibold"></dd></div>
+          <div class="grid grid-cols-[110px_1fr] gap-3"><dt class="text-zinc-400">SCFHS</dt><dd id="infoScfhs" class="font-semibold"></dd></div>
+          <div class="grid grid-cols-[110px_1fr] gap-3"><dt class="text-zinc-400">Ref. Number</dt><dd id="infoRef" class="font-semibold"></dd></div>
+        </dl>
+        <button id="printBtn" type="button" class="btn-outline rounded-lg px-5 py-2.5 mt-6 font-semibold">Print Badge</button>
+      </div>
+    </section>
+
+    <!-- Badge preview -->
+    <section class="flex flex-col items-center" aria-label="Badge preview">
+      <div id="badge" class="badge" hidden>
+        <div class="badge__punch" aria-hidden="true"></div>
+        <div class="badge__bar" aria-hidden="true"></div>
+        <div class="badge__body">
+          <div class="flex items-start justify-between">
+            <div class="badge__event" id="badgeEvent"></div>
+            <div class="badge__seal" aria-hidden="true">
+              <svg viewBox="0 0 100 100" width="48" height="48">
+                <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="4"/>
+                <path d="M32 64 L50 28 L68 64 Z" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="badge__name" id="badgeName"></div>
+          <div class="badge__info" id="badgeInfo"></div>
+          <div class="badge__foot">
+            <img class="badge__qr" id="badgeQr" alt="QR code" width="110" height="110" />
+            <div class="badge__ref">
+              <span id="badgeRef"></span>
+              <small>Ref. Number</small>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p id="badgePlaceholder" class="text-zinc-500 text-center py-10">The badge will appear here after a successful search.</p>
+    </section>
+  </main>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
